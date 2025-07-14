@@ -1,3 +1,4 @@
+//index.js
 import "./styles.css";
 import { getWeatherData } from './api.js';
 import { displayWeatherData } from './ui.js';
@@ -14,6 +15,7 @@ const hourlyDrawer = document.getElementById('hourly-forecast-drawer');
 const hourlyToggleTitle = document.getElementById('hourly-toggle-title');
 const currentDateEl = document.getElementById('current-date');
 const refreshBtn = document.getElementById('refresh-btn');
+const loadingMessage = document.getElementById('loading-message');
 
 let temperatureUnit = 'F';
 let windSpeedUnit = 'mph';
@@ -40,6 +42,12 @@ function showLoader() {
 
 function hideLoader() {
   loader.classList.remove('visible');
+}
+
+function showLoadingMessage(show = true) {
+  if (loadingMessage) {
+    loadingMessage.classList.toggle('hidden', !show);
+  }
 }
 
 async function loadWeatherFor(location) {
@@ -96,14 +104,16 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   setCurrentDate();
 
+  showLoadingMessage(true);
   try {
     const geoLocation = await tryGeolocation();
     await loadWeatherFor(geoLocation);
   } catch {
-    // Fallback only if not already fetched
     if (!hasFetchedWeather) {
       await loadWeatherFor('Tokyo, Japan');
     }
+  } finally {
+    showLoadingMessage(false);
   }
 });
 
@@ -129,7 +139,7 @@ locationForm?.addEventListener('submit', (e) => {
   e.preventDefault();
   const location = locationInput.value.trim();
   if (location) {
-    hasFetchedWeather = false; // allow new fetch
+    hasFetchedWeather = false;
     loadWeatherFor(location);
   }
 });

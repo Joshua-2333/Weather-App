@@ -21,7 +21,7 @@ body.day-mode {
   color: black;
 }
 
-body.night-mode {
+body.night-mode  {
   background-color: #1a1a1a;
   color: white;
 }
@@ -463,6 +463,44 @@ input:focus {
   filter: brightness(1.3);
 }
 
+/* Geolocation Loading Message */
+#loading-message {
+  display: block;
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 123, 204, 0.95);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 30px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 9999;
+  animation: slideFadeIn 0.5s ease-out forwards;
+}
+
+#loading-message {
+  background: rgba(0, 123, 204, 0.8);
+  color: white;
+}
+
+#loading-message.hidden {
+  display: none;
+}
+
+@keyframes slideFadeIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 
 @media (max-width: 600px) {
   .forecast-item,
@@ -569,3 +607,4 @@ input:focus {
     margin-left: 0;
   }
 }
+
