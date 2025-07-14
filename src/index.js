@@ -1,4 +1,3 @@
-//index.js
 import "./styles.css";
 import { getWeatherData } from './api.js';
 import { displayWeatherData } from './ui.js';
@@ -35,6 +34,44 @@ function setCurrentDate() {
   }
 }
 
+async function loadWeatherFor(location) {
+  if (!location) return;
+
+  submitBtn.disabled = true;
+  showLoader();
+  errorMessage.textContent = '';
+  locationInput.value = location;
+
+  try {
+    const data = await getWeatherData(location);
+
+    if (!data || !data.resolvedAddress) {
+      throw new Error('Invalid location');
+    }
+
+    cachedWeatherData = data;
+
+    displayWeatherData(data, { temperatureUnit, windSpeedUnit });
+    changePageTheme(data);
+    setCurrentDate();
+
+    currentLocation = location;
+
+    if (window.innerWidth <= 768) {
+      openDrawer();
+    }
+
+  } catch (err) {
+    console.error('Fetch error:', err);
+    errorMessage.textContent = `Unable to get weather for "${location}". Please try a specific city or region.`;
+  } finally {
+    hideLoader();
+    setTimeout(() => {
+      submitBtn.disabled = false;
+    }, 1000);
+  }
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   if (window.innerWidth > 600) {
     hourlyDrawer?.classList.add('open');
@@ -42,14 +79,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setCurrentDate();
 
-  // Load default weather for Tokyo if geolocation doesn't run first
-  if (!didFetchOnLoad) {
-    const fallback = 'Tokyo, Japan';
-    locationInput.value = fallback;
-    currentLocation = fallback;
-    locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
-    didFetchOnLoad = true;
-  }
+  // Load fallback if geolocation doesn't return in time
+  setTimeout(() => {
+    if (!didFetchOnLoad) {
+      didFetchOnLoad = true;
+      loadWeatherFor('Tokyo, Japan');
+    }
+  }, 1000); // Slight delay to allow geolocation a chance
 });
 
 temperatureButtons.forEach((button) => {
@@ -78,44 +114,10 @@ function hideLoader() {
   loader.classList.remove('visible');
 }
 
-locationForm?.addEventListener('submit', async (e) => {
+locationForm?.addEventListener('submit', (e) => {
   e.preventDefault();
   const location = locationInput.value.trim();
-  if (!location) return;
-
-  submitBtn.disabled = true;
-  showLoader();
-  errorMessage.textContent = '';
-
-  try {
-    const data = await getWeatherData(location);
-
-    if (!data || !data.resolvedAddress) {
-      throw new Error('Invalid location');
-    }
-
-    cachedWeatherData = data;
-
-    displayWeatherData(data, { temperatureUnit, windSpeedUnit });
-    changePageTheme(data);
-    setCurrentDate();
-
-    currentLocation = location;
-
-    if (window.innerWidth <= 768) {
-      openDrawer();
-    }
-
-    locationForm.dispatchEvent(new Event('weather-updated'));
-  } catch (err) {
-    console.error('Fetch error:', err);
-    errorMessage.textContent = `Unable to get weather for "${location}". Please try a specific city or region.`;
-  } finally {
-    hideLoader();
-    setTimeout(() => {
-      submitBtn.disabled = false;
-    }, 1000);
-  }
+  loadWeatherFor(location);
 });
 
 function refreshWeather() {
@@ -145,7 +147,7 @@ function openDrawer() {
 
 hourlyToggleTitle?.addEventListener('click', toggleDrawer);
 
-// Refresh button logic with loader animation
+// Refresh button logic
 if (refreshBtn && typeof window.refreshWeather === 'function') {
   refreshBtn.addEventListener('click', () => {
     refreshBtn.disabled = true;
@@ -163,23 +165,14 @@ if (refreshBtn && typeof window.refreshWeather === 'function') {
   });
 }
 
-// Geolocation on load
+// Geolocation first
 navigator.geolocation?.getCurrentPosition(
-  async ({ coords: { latitude, longitude } }) => {
+  ({ coords: { latitude, longitude } }) => {
     const loc = `${latitude},${longitude}`;
-    locationInput.value = loc;
-    currentLocation = loc;
     didFetchOnLoad = true;
-    locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
+    loadWeatherFor(loc);
   },
   () => {
-    if (!didFetchOnLoad) {
-      const fallback = 'Tokyo, Japan';
-      locationInput.value = fallback;
-      currentLocation = fallback;
-      locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
-      didFetchOnLoad = true;
-    }
+    // Fail silently, fallback handled in DOMContentLoaded
   }
 );
-
