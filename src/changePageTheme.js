@@ -1,4 +1,4 @@
-// changePageTheme.js
+//changePageTheme.js
 
 // Background images
 import clearDay from '/images/clear-day.jpg';
@@ -44,7 +44,7 @@ import sunriseGif from '/gifs/sunrise.gif';
 import sunsetGif from '/gifs/sunset.gif';
 import uvIndexGif from '/gifs/uv-index.gif';
 
-// Weather condition to GIF map
+// Maps: weather condition → GIF/icon and background image
 const conditionIconMap = {
   'clear-day': clearDayGif,
   'clear-night': clearNightGif,
@@ -64,7 +64,6 @@ const conditionIconMap = {
   'tornado': tornadoGif
 };
 
-// Weather condition to background image map
 const conditionBackgroundMap = {
   'clear-day': clearDay,
   'clear-night': clearNight,
@@ -85,70 +84,63 @@ const conditionBackgroundMap = {
   'default': defaultBackground
 };
 
-// Determine weather condition
+// Determine condition based on data
 function getWeatherCondition(current, day) {
-  const nowEpoch = current.datetimeEpoch;
-  const sunriseEpoch = day?.sunriseEpoch;
-  const sunsetEpoch = day?.sunsetEpoch;
+  const now = current.datetimeEpoch;
+  const isNight = now < day.sunriseEpoch || now > day.sunsetEpoch;
 
-  const isNight = nowEpoch < sunriseEpoch || nowEpoch > sunsetEpoch;
   const { preciptype, windspeed, cloudcover, conditions = '' } = current;
 
-  if (/tornado/i.test(conditions)) {
-    return 'tornado';
-  } else if (/thunder/i.test(conditions)) {
-    return isNight ? 'thunder-showers-night' : 'thunder-showers-day';
-  } else if (Array.isArray(preciptype) && preciptype.includes('rain') && preciptype.includes('snow')) {
-    return isNight ? 'rain-snow-showers-night' : 'rain-snow-showers-day';
-  } else if (Array.isArray(preciptype) && preciptype.includes('rain')) {
-    return isNight ? 'rain-night' : 'rain-day';
-  } else if (Array.isArray(preciptype) && preciptype.includes('snow')) {
-    return isNight ? 'snow-night' : 'snow-day';
-  } else if (typeof windspeed === 'number' && windspeed >= 20) {
-    return 'windy';
-  } else if (/fog/i.test(conditions)) {
-    return 'fog';
-  } else if (typeof cloudcover === 'number' && cloudcover >= 30) {
-    return isNight ? 'partly-cloudy-night' : 'partly-cloudy-day';
-  } else {
-    return isNight ? 'clear-night' : 'clear-day';
+  if (/tornado/i.test(conditions)) return 'tornado';
+  if (/thunder/i.test(conditions)) return isNight ? 'thunder-showers-night' : 'thunder-showers-day';
+  if (Array.isArray(preciptype)) {
+    if (preciptype.includes('rain') && preciptype.includes('snow')) {
+      return isNight ? 'rain-snow-showers-night' : 'rain-snow-showers-day';
+    }
+    if (preciptype.includes('rain')) return isNight ? 'rain-night' : 'rain-day';
+    if (preciptype.includes('snow')) return isNight ? 'snow-night' : 'snow-day';
   }
+  if (typeof windspeed === 'number' && windspeed >= 20) return 'windy';
+  if (/fog/i.test(conditions)) return 'fog';
+  if (typeof cloudcover === 'number' && cloudcover >= 30) {
+    return isNight ? 'partly-cloudy-night' : 'partly-cloudy-day';
+  }
+  return isNight ? 'clear-night' : 'clear-day';
 }
 
-// Apply theme based on condition
+// Apply theme to page
 function changePageTheme(data) {
   const current = data?.currentConditions;
   const today = data?.days?.[0];
 
   if (!current || !today) {
-    console.warn("Weather data not available. Skipping theme change.");
+    console.warn('Weather data not available. Skipping theme change.');
     return;
   }
 
-  const weatherCondition = getWeatherCondition(current, today);
-  const iconUrl = conditionIconMap[weatherCondition] || clearDayGif;
-  const backgroundUrl = conditionBackgroundMap[weatherCondition] || defaultBackground;
+  const condition = getWeatherCondition(current, today);
+  const icon = conditionIconMap[condition] || clearDayGif;
+  const background = conditionBackgroundMap[condition] || defaultBackground;
 
-  const iconElement = document.getElementById("weather-icon");
-  if (iconElement) {
-    iconElement.src = iconUrl;
-    iconElement.alt = current.conditions || weatherCondition;
+  // Set weather icon
+  const iconEl = document.getElementById('weather-icon');
+  if (iconEl) {
+    iconEl.src = icon;
+    iconEl.alt = current.conditions || condition;
   }
 
-  document.body.style.backgroundImage = `url("${backgroundUrl}")`;
+  // Set background style
+  document.body.style.backgroundImage = `url("${background}")`;
   document.body.style.backgroundSize = 'cover';
   document.body.style.backgroundRepeat = 'no-repeat';
   document.body.style.backgroundPosition = 'center';
   document.body.style.backgroundAttachment = 'fixed';
 
-  if (weatherCondition.includes('night')) {
-    document.body.classList.add('night-mode');
-  } else {
-    document.body.classList.remove('night-mode');
-  }
+  // Set day/night theme class
+  document.body.classList.toggle('night-mode', condition.includes('night'));
 }
 
-// Export for extra forecast use
+// Export for use in other modules
 const additionalInfoGifs = {
   humidity: humidityGif,
   'rain-chance': rainChanceGif,

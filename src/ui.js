@@ -73,7 +73,6 @@ function getIconUrl(icon) {
 function displayWeatherData(data, unitOptions = { temperatureUnit: 'F', windSpeedUnit: 'mph' }) {
   if (!data?.currentConditions) return;
 
-  // Show skeletons temporarily
   [hourlyForecastElement, dailyForecastElement, extraForecastElement].forEach(el => {
     if (el) {
       el.innerHTML = `<div class="skeleton-loader"></div>`;
@@ -246,7 +245,6 @@ function setDayNightTheme(currentEpoch, sunriseEpoch, sunsetEpoch) {
   document.body.classList.add(isDay ? 'day-mode' : 'night-mode');
 }
 
-// Add refresh button logic
 if (refreshButton && typeof window.refreshWeather === 'function') {
   refreshButton.addEventListener('click', () => {
     refreshButton.disabled = true;

@@ -8,48 +8,38 @@ function processWeatherData(data) {
     data.days.length === 0
   ) {
     console.warn('⚠️ Invalid or incomplete weather data:', data);
-    return {
-      temperature: null,
-      feelsLike: null,
-      windSpeed: null,
-      humidity: null,
-      uvIndex: null,
-      rainChance: null,
-      conditions: 'Unavailable',
-      icon: null,
-      sunrise: null,
-      sunset: null
-    };
+    return defaultWeatherData();
   }
 
-  const {
-    temp = null,
-    feelslike = null,
-    windspeed = null,
-    windSpeed = null,
-    humidity = null,
-    uvindex = null,
-    precipprob = null,
-    conditions = 'Unavailable',
-    icon = null
-  } = data.currentConditions;
-
-  const {
-    sunrise = null,
-    sunset = null
-  } = data.days[0];
+  const current = data.currentConditions;
+  const today = data.days[0];
 
   return {
-    temperature: temp,
-    feelsLike: feelslike,
-    windSpeed: windspeed ?? windSpeed,
-    humidity,
-    uvIndex: uvindex,
-    rainChance: precipprob,
-    conditions,
-    icon,
-    sunrise,
-    sunset
+    temperature: current.temp ?? null,
+    feelsLike: current.feelslike ?? null,
+    windSpeed: current.windspeed ?? current.windSpeed ?? null,
+    humidity: current.humidity ?? null,
+    uvIndex: current.uvindex ?? current.uvIndex ?? null,
+    rainChance: current.precipprob ?? current.precipProbability ?? null,
+    conditions: current.conditions || 'Unavailable',
+    icon: current.icon ?? null,
+    sunrise: today.sunrise ?? null,
+    sunset: today.sunset ?? null
+  };
+}
+
+function defaultWeatherData() {
+  return {
+    temperature: null,
+    feelsLike: null,
+    windSpeed: null,
+    humidity: null,
+    uvIndex: null,
+    rainChance: null,
+    conditions: 'Unavailable',
+    icon: null,
+    sunrise: null,
+    sunset: null
   };
 }
 

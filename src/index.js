@@ -1,4 +1,4 @@
-//index.js
+// index.js
 import "./styles.css";
 import { getWeatherData } from './api.js';
 import { displayWeatherData } from './ui.js';
@@ -50,13 +50,33 @@ function showLoadingMessage(show = true) {
   }
 }
 
+function refreshWeather() {
+  if (!cachedWeatherData) return Promise.resolve();
+  displayWeatherData(cachedWeatherData, { temperatureUnit, windSpeedUnit });
+  return Promise.resolve();
+}
+
+window.refreshWeather = refreshWeather;
+
+function toggleDrawer() {
+  if (window.innerWidth <= 768) {
+    hourlyDrawer?.classList.toggle('open');
+  }
+}
+
+function openDrawer() {
+  if (window.innerWidth <= 768) {
+    hourlyDrawer?.classList.add('open');
+  }
+}
+
 async function loadWeatherFor(location) {
   if (!location || hasFetchedWeather) return;
 
   showLoader();
   errorMessage.textContent = '';
   submitBtn.disabled = true;
-  locationInput.value = location;
+  locationInput.value = location.trim();
 
   try {
     const data = await getWeatherData(location);
@@ -103,8 +123,8 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 
   setCurrentDate();
-
   showLoadingMessage(true);
+
   try {
     const geoLocation = await tryGeolocation();
     await loadWeatherFor(geoLocation);
@@ -144,26 +164,6 @@ locationForm?.addEventListener('submit', (e) => {
   }
 });
 
-function refreshWeather() {
-  if (!cachedWeatherData) return Promise.resolve();
-  displayWeatherData(cachedWeatherData, { temperatureUnit, windSpeedUnit });
-  return Promise.resolve();
-}
-
-window.refreshWeather = refreshWeather;
-
-function toggleDrawer() {
-  if (window.innerWidth <= 768) {
-    hourlyDrawer?.classList.toggle('open');
-  }
-}
-
-function openDrawer() {
-  if (window.innerWidth <= 768) {
-    hourlyDrawer?.classList.add('open');
-  }
-}
-
 hourlyToggleTitle?.addEventListener('click', toggleDrawer);
 
 if (refreshBtn && typeof window.refreshWeather === 'function') {
@@ -171,6 +171,7 @@ if (refreshBtn && typeof window.refreshWeather === 'function') {
     refreshBtn.disabled = true;
     refreshBtn.textContent = '⏳';
     showLoader();
+
     window.refreshWeather().finally(() => {
       setTimeout(() => {
         refreshBtn.disabled = false;
@@ -180,3 +181,4 @@ if (refreshBtn && typeof window.refreshWeather === 'function') {
     });
   });
 }
+

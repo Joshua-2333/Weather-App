@@ -146,8 +146,8 @@ input:focus {
 }
 
 #location-name {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 1.5rem;
+  font-weight: bold;
   margin-top: 0.5rem;
   text-align: center;
 }
@@ -510,15 +510,7 @@ input:focus {
     font-size: 0.95rem;
   }
 
-  .temp-container {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-start;
-  gap: 1.5rem;
-  margin: 2rem 2rem 0;
-  position: relative;
-}
+  
 
 .temp-info-block {
   display: flex;
@@ -598,13 +590,138 @@ input:focus {
 }
 
 .temp-info-block.left-align {
-  margin-left: -125rem;
+  margin-left: auto;
+  margin-right: auto;
   text-align: left;
 }
-
 @media (max-width: 768px) {
   .temp-info-block.left-align {
+    text-align: left;
     margin-left: 0;
+    margin-right: 0;
   }
 }
 
+.temp-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+  .temp-container {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .top-right-controls {
+    position: static;
+    margin-top: 1rem;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+.forecast-row,
+#hourly-forecast,
+#daily-forecast,
+#extra-forecast {
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 1rem; /* optional, for better snap alignment */
+  gap: 1rem;
+}
+
+
+@media (max-width: 480px) {
+  .forecast-item {
+    min-width: 90px;
+    font-size: 0.85rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Base style: left-aligned for desktop */
+.temp-info-block {
+  text-align: left;
+  align-items: flex-start;
+}
+
+/* Base style - unchanged for desktop */
+.temp-info-block {
+  text-align: left;
+  align-items: flex-start;
+}
+
+/* Center and shift right slightly on mobile */
+@media (max-width: 768px) {
+  .temp-info-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 75%;
+    transform: translateX(70%);
+  }
+
+  .temp-info-block p,
+  .temp-wind-container {
+    text-align: center;
+  }
+
+  #location-name {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .top-right-controls {
+    transform: translateX(40%);
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+@media (max-width: 768px) {
+  #loader.skeleton-loader {
+    transform: translateX(40%);
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .forecast-section {
+  transform: translateX(40%);
+  }
+}
+
+@media (min-width: 769px) {
+  #loader.skeleton-loader {
+    margin-left: 68rem; /* Adjust this value to shift right more or less */
+  }
+}
+
+@media (min-width: 769px) {
+  .temp-info-block.left-align {
+    margin-left: 58rem; /* Adjust this value as needed */
+  }
+}
+
+@media (min-width: 769px) {
+  #weather-icon {
+    margin-top: 0.5rem; /* Adjust this as needed */
+  }
+}
