@@ -17,7 +17,12 @@ function isLatLon(input) {
  * @returns {Promise<Object>} Weather data object
  */
 async function getWeatherData(location) {
-  const query = isLatLon(location) ? location : encodeURIComponent(location);
+  if (!location || typeof location !== 'string' || location.trim() === '') {
+    console.warn('getWeatherData: No valid location provided. Skipping fetch.');
+    return null;
+  }
+
+  const query = isLatLon(location) ? location : encodeURIComponent(location.trim());
   const url = `${BASE_URL}/${query}?key=${API_KEY}&unitGroup=us&include=current,hours,days`;
 
   try {

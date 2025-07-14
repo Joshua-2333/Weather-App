@@ -1,4 +1,4 @@
-// index.js
+//index.js
 import "./styles.css";
 import { getWeatherData } from './api.js';
 import { displayWeatherData } from './ui.js';
@@ -20,6 +20,7 @@ let temperatureUnit = 'F';
 let windSpeedUnit = 'mph';
 let currentLocation = '';
 let cachedWeatherData = null;
+let didFetchOnLoad = false;
 
 function setCurrentDate() {
   if (currentDateEl) {
@@ -38,7 +39,17 @@ window.addEventListener('DOMContentLoaded', () => {
   if (window.innerWidth > 600) {
     hourlyDrawer?.classList.add('open');
   }
+
   setCurrentDate();
+
+  // Load default weather for Tokyo if geolocation doesn't run first
+  if (!didFetchOnLoad) {
+    const fallback = 'Tokyo, Japan';
+    locationInput.value = fallback;
+    currentLocation = fallback;
+    locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
+    didFetchOnLoad = true;
+  }
 });
 
 temperatureButtons.forEach((button) => {
@@ -147,7 +158,7 @@ if (refreshBtn && typeof window.refreshWeather === 'function') {
         refreshBtn.disabled = false;
         refreshBtn.textContent = '🔄';
         hideLoader();
-      }, 600); // Adds visible delay for animation effect
+      }, 600);
     });
   });
 }
@@ -158,12 +169,17 @@ navigator.geolocation?.getCurrentPosition(
     const loc = `${latitude},${longitude}`;
     locationInput.value = loc;
     currentLocation = loc;
+    didFetchOnLoad = true;
     locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
   },
   () => {
-    const fallback = 'Tokyo, Japan';
-    locationInput.value = fallback;
-    currentLocation = fallback;
-    locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
+    if (!didFetchOnLoad) {
+      const fallback = 'Tokyo, Japan';
+      locationInput.value = fallback;
+      currentLocation = fallback;
+      locationForm.dispatchEvent(new Event('submit', { bubbles: true }));
+      didFetchOnLoad = true;
+    }
   }
 );
+
