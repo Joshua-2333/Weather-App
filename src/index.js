@@ -19,7 +19,7 @@ let temperatureUnit = 'F';
 let windSpeedUnit = 'mph';
 let currentLocation = '';
 let cachedWeatherData = null;
-let didFetchOnLoad = false;
+let hasFetchedWeather = false;
 
 function setCurrentDate() {
   if (currentDateEl) {
@@ -34,12 +34,20 @@ function setCurrentDate() {
   }
 }
 
-async function loadWeatherFor(location) {
-  if (!location) return;
+function showLoader() {
+  loader.classList.add('visible');
+}
 
-  submitBtn.disabled = true;
+function hideLoader() {
+  loader.classList.remove('visible');
+}
+
+async function loadWeatherFor(location) {
+  if (!location || hasFetchedWeather) return;
+
   showLoader();
   errorMessage.textContent = '';
+  submitBtn.disabled = true;
   locationInput.value = location;
 
   try {
@@ -50,17 +58,16 @@ async function loadWeatherFor(location) {
     }
 
     cachedWeatherData = data;
-
     displayWeatherData(data, { temperatureUnit, windSpeedUnit });
     changePageTheme(data);
     setCurrentDate();
 
     currentLocation = location;
+    hasFetchedWeather = true;
 
     if (window.innerWidth <= 768) {
       openDrawer();
     }
-
   } catch (err) {
     console.error('Fetch error:', err);
     errorMessage.textContent = `Unable to get weather for "${location}". Please try a specific city or region.`;
@@ -72,20 +79,32 @@ async function loadWeatherFor(location) {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+async function tryGeolocation() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject('Geolocation not supported');
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => resolve(`${coords.latitude},${coords.longitude}`),
+      () => reject('Permission denied or unavailable')
+    );
+  });
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
   if (window.innerWidth > 600) {
     hourlyDrawer?.classList.add('open');
   }
 
   setCurrentDate();
 
-  // Load fallback if geolocation doesn't return in time
-  setTimeout(() => {
-    if (!didFetchOnLoad) {
-      didFetchOnLoad = true;
-      loadWeatherFor('Tokyo, Japan');
+  try {
+    const geoLocation = await tryGeolocation();
+    await loadWeatherFor(geoLocation);
+  } catch {
+    // Fallback only if not already fetched
+    if (!hasFetchedWeather) {
+      await loadWeatherFor('Tokyo, Japan');
     }
-  }, 1000); // Slight delay to allow geolocation a chance
+  }
 });
 
 temperatureButtons.forEach((button) => {
@@ -106,28 +125,18 @@ windSpeedButtons.forEach((button) => {
   });
 });
 
-function showLoader() {
-  loader.classList.add('visible');
-}
-
-function hideLoader() {
-  loader.classList.remove('visible');
-}
-
 locationForm?.addEventListener('submit', (e) => {
   e.preventDefault();
   const location = locationInput.value.trim();
-  loadWeatherFor(location);
+  if (location) {
+    hasFetchedWeather = false; // allow new fetch
+    loadWeatherFor(location);
+  }
 });
 
 function refreshWeather() {
   if (!cachedWeatherData) return Promise.resolve();
-
-  displayWeatherData(cachedWeatherData, {
-    temperatureUnit,
-    windSpeedUnit
-  });
-
+  displayWeatherData(cachedWeatherData, { temperatureUnit, windSpeedUnit });
   return Promise.resolve();
 }
 
@@ -147,14 +156,11 @@ function openDrawer() {
 
 hourlyToggleTitle?.addEventListener('click', toggleDrawer);
 
-// Refresh button logic
 if (refreshBtn && typeof window.refreshWeather === 'function') {
   refreshBtn.addEventListener('click', () => {
     refreshBtn.disabled = true;
     refreshBtn.textContent = '⏳';
-
     showLoader();
-
     window.refreshWeather().finally(() => {
       setTimeout(() => {
         refreshBtn.disabled = false;
@@ -164,15 +170,3 @@ if (refreshBtn && typeof window.refreshWeather === 'function') {
     });
   });
 }
-
-// Geolocation first
-navigator.geolocation?.getCurrentPosition(
-  ({ coords: { latitude, longitude } }) => {
-    const loc = `${latitude},${longitude}`;
-    didFetchOnLoad = true;
-    loadWeatherFor(loc);
-  },
-  () => {
-    // Fail silently, fallback handled in DOMContentLoaded
-  }
-);
